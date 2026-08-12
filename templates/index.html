@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interestelar - Motor de Búsqueda Semántica</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Fondo espacial animado -->
+    <div class="space-background">
+        <div class="stars"></div>
+        <div class="stars2"></div>
+        <div class="stars3"></div>
+    </div>
+
+    <!-- Agujero negro (Gargantua) -->
+    <div class="blackhole">
+        <div class="accretion-disk"></div>
+        <div class="event-horizon"></div>
+    </div>
+
+    <!-- Contenedor principal -->
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="title">INTERESTELAR</h1>
+            <p class="subtitle">Motor de Búsqueda Semántica de Frases Inspiracionales</p>
+            <div class="tech-badge">
+                <span class="badge-item">🚫 Sin IA</span>
+                <span class="badge-item">⚡ Embeddings Locales</span>
+                <span class="badge-item">🎯 Similitud Coseno</span>
+            </div>
+        </header>
+
+        <!-- Sección de búsqueda -->
+        <main class="main-content">
+            <div class="search-section">
+                <div class="search-container">
+                    <label for="query" class="search-label">
+                        Ingresa tu emoción, situación o pensamiento...
+                    </label>
+                    <textarea 
+                        id="query" 
+                        class="search-input" 
+                        placeholder="Ejemplo: Siento que el tiempo pasa muy rápido y no estoy logrando mis metas"
+                        rows="3"
+                    ></textarea>
+                    <button id="search-btn" class="search-button">
+                        <span class="btn-text">INICIAR BÚSQUEDA</span>
+                        <span class="btn-icon">→</span>
+                    </button>
+                </div>
+
+                <!-- Ejemplos rápidos -->
+                <div class="quick-examples">
+                    <p class="examples-title">Ejemplos:</p>
+                    <button class="example-btn" data-query="Siento que el tiempo pasa muy rápido y no estoy logrando mis metas">
+                        Frustración temporal
+                    </button>
+                    <button class="example-btn" data-query="La sensación de paz al mirar la lluvia">
+                        Paz contemplativa
+                    </button>
+                    <button class="example-btn" data-query="Necesito motivación para enfrentar un desafío difícil">
+                        Motivación
+                    </button>
+                    <button class="example-btn" data-query="Me siento solo y nadie me entiende">
+                        Soledad
+                    </button>
+                </div>
+            </div>
+
+            <!-- Resultados -->
+            <div id="results-section" class="results-section hidden">
+                <div class="results-header">
+                    <h2 class="results-title">FRASES ENCONTRADAS</h2>
+                    <div class="results-meta">
+                        <span id="search-time" class="meta-item"></span>
+                        <span id="total-phrases" class="meta-item"></span>
+                    </div>
+                </div>
+
+                <div id="results-container" class="results-container">
+                    <!-- Los resultados se insertan aquí dinámicamente -->
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading" class="loading hidden">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Analizando semántica...</p>
+            </div>
+
+            <!-- Error -->
+            <div id="error-section" class="error-section hidden">
+                <p class="error-text"></p>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p class="footer-text">
+                    Tecnología: sentence-transformers (all-MiniLM-L6-v2) + Similitud Coseno
+                </p>
+                <p class="footer-sub">
+                    100 frases inspiracionales | Búsqueda 100% local | Sin APIs externas
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
