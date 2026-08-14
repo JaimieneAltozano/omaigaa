@@ -3,42 +3,43 @@
 
 <head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Frasoteca · Buscador de Vibras y Orador de Debates</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frasoteca · Buscador de Vibras &amp; Orador de Debates (Bauhaus Edition)</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&family=Space+Grotesk:wght@400;500;700&display=swap"
-        rel="stylesheet"
-    >
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 
 <body>
 
-<div class="geo geo-sol"></div>
-<div class="geo geo-circulo"></div>
-<div class="geo geo-cuadrado"></div>
-<div class="geo geo-triangulo"></div>
-<div class="geo geo-ola"></div>
+<!-- Formas geométricas de fondo Bauhaus -->
+<div class="geo geo-circulo-red"></div>
+<div class="geo geo-cuadrado-blue"></div>
+<div class="geo geo-triangulo-yellow"></div>
+<div class="geo geo-semicirculo"></div>
+<div class="geo geo-grid-pattern"></div>
 
 <div class="container">
 
     <header class="corona">
+        <div class="bauhaus-badge">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot blue"></span>
+            <span>MOTOR RAG &amp; BÚSQUEDA SEMÁNTICA LOCAL</span>
+        </div>
+
         <div class="figuras">
             <span class="figura triangulo"></span>
             <span class="figura circulo"></span>
             <span class="figura cuadrado"></span>
         </div>
 
-        <h1>Frasoteca</h1>
+        <h1>FRASOTECA</h1>
+        <div class="sub-h1">FORM &amp; FUNCTION IN PHILOSOPHICAL REASONING</div>
 
         <div class="tira" aria-hidden="true">
             <span class="r"></span>
@@ -48,52 +49,33 @@
         </div>
 
         <p class="descripcion">
-            Buscador de «Vibras»: describe una emoción y obtén las 3 citas que
-            mejor conectan (sin palabras clave).<br>
-            Orador de Debates: haz una pregunta y recibe un mini-ensayo que
-            cita textualmente las fuentes de la base de datos.
+            <strong>Buscador de «Vibras»:</strong> Transmite una emoción o inquietud abstracta para recuperar las 3 citas de la base que mejor conectan semánticamente.<br>
+            <strong>Orador de Debates:</strong> Plantea una pregunta compleja y recibe un ensayo explicativo en profundidad respaldado con citas textuales verificadas.
         </p>
 
         <div class="friso">
-            <span class="emblema">▲ ● ■</span>
+            <span class="emblema">▲ ● ■ STURM UND DRANG ■ ● ▲</span>
         </div>
-
-        <svg class="olas" viewBox="0 0 860 26" preserveAspectRatio="none"
-             aria-hidden="true" role="presentation">
-            <path d="M0 13 Q 21.5 0, 43 13 T 86 13 T 129 13 T 172 13 T 215 13
-                     T 258 13 T 301 13 T 344 13 T 387 13 T 430 13 T 473 13
-                     T 516 13 T 559 13 T 602 13 T 645 13 T 688 13 T 731 13
-                     T 774 13 T 817 13 T 860 13 V 26 H 0 Z"
-                  fill="var(--oceano)" opacity="0.45"></path>
-            <path d="M0 21 Q 21.5 8, 43 21 T 86 21 T 129 21 T 172 21 T 215 21
-                     T 258 21 T 301 21 T 344 21 T 387 21 T 430 21 T 473 21
-                     T 516 21 T 559 21 T 602 21 T 645 21 T 688 21 T 731 21
-                     T 774 21 T 817 21 T 860 21 V 26 H 0 Z"
-                  fill="var(--oceano)" opacity="0.75"></path>
-        </svg>
     </header>
 
     <div class="tabs">
-        <button
-            type="button"
-            class="tab active"
-            data-modo="vibes"
-        >Buscar vibras</button>
+        <button type="button" class="tab active" data-modo="vibes">
+            <span class="symbol">▲</span> Buscador de vibras
+        </button>
 
-        <button
-            type="button"
-            class="tab"
-            data-modo="debate"
-        >Orador de debates</button>
+        <button type="button" class="tab" data-modo="debate">
+            <span class="symbol">■</span> Orador de debates
+        </button>
     </div>
 
     <!-- ================== BUSCADOR DE VIBRAS ================== -->
 
     <div id="panel-vibes" class="panel active">
-        <form id="vibes-form">
-            <label for="consulta">
-                Describe tu emoción, situación o pensamiento...
-            </label>
+        <form id="vibes-form" class="bauhaus-card">
+            <div class="form-header">
+                <span class="shape-indicator circle"></span>
+                <label for="consulta">Describe tu emoción, situación o pensamiento...</label>
+            </div>
 
             <textarea
                 id="consulta"
@@ -102,12 +84,17 @@
                 required
             ></textarea>
 
-            <button type="submit">Buscar</button>
+            <button type="submit">
+                <span>BUSCAR VIBRAS</span>
+                <span class="arrow">→</span>
+            </button>
         </form>
 
         <div id="vibes-loading" class="loading hidden">
-            <span class="pulso"></span>
-            <div class="texto-carga">Consultando la cámara de frases...</div>
+            <div class="morph-loader">
+                <div class="morph-shape"></div>
+            </div>
+            <div class="texto-carga">Consultando la cámara de frases semánticas...</div>
         </div>
 
         <div id="vibes-error" class="notice hidden">
@@ -120,10 +107,11 @@
     <!-- ================== ORADOR DE DEBATES ================== -->
 
     <div id="panel-debate" class="panel">
-        <form id="debate-form">
-            <label for="pregunta">
-                Haz una pregunta filosófica o compleja...
-            </label>
+        <form id="debate-form" class="bauhaus-card">
+            <div class="form-header">
+                <span class="shape-indicator square"></span>
+                <label for="pregunta">Haz una pregunta filosófica o compleja...</label>
+            </div>
 
             <textarea
                 id="pregunta"
@@ -132,12 +120,17 @@
                 required
             ></textarea>
 
-            <button type="submit">Debatir</button>
+            <button type="submit">
+                <span>GENERAR DEBATE</span>
+                <span class="arrow">→</span>
+            </button>
         </form>
 
         <div id="debate-loading" class="loading hidden">
-            <span class="pulso"></span>
-            <div class="texto-carga">Revisando fuentes y redactando el ensayo...</div>
+            <div class="morph-loader">
+                <div class="morph-shape"></div>
+            </div>
+            <div class="texto-carga">Sintetizando fuentes y redactando ensayo explicativo...</div>
         </div>
 
         <div id="debate-error" class="notice hidden">
@@ -149,7 +142,8 @@
 
     <footer class="pie">
         <div class="gemas">▲ ● ■</div>
-        Frasoteca · Mar, Arena y Forma
+        <div class="footer-title">FRASOTECA · DESIGN &amp; REASONING</div>
+        <div class="sub-pie">BAUHAUS GEOMETRIC SYSTEM</div>
     </footer>
 
 </div>
@@ -157,5 +151,4 @@
 <script src="/static/js/app.js" defer></script>
 
 </body>
-
 </html>

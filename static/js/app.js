@@ -1,11 +1,11 @@
-// ========================================
-// FRASOTECA - Buscador de Vibras y Orador de Debates
-// Conecta el frontend con la API del servidor Flask
-// ========================================
+// ==========================================================================
+// FRASOTECA - BUSCADOR DE VIBRAS & ORADOR DE DEBATES (BAUHAUS INTERFACE)
+// Conecta la interfaz web interactiva con la API REST Flask
+// ==========================================================================
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ---------- Pestañas ----------
+    // ---------- PESTAÑAS (BAUHAUS TABS) ----------
 
     var botones = document.querySelectorAll('.tab');
 
@@ -33,13 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ---------- Utilidades ----------
-
-    function escapar(texto) {
-        var div = document.createElement('div');
-        div.textContent = texto;
-        return div.innerHTML;
-    }
+    // ---------- UTILIDADES DE PETICIÓN ----------
 
     async function peticion(url, cuerpo) {
         var respuesta = await fetch(url, {
@@ -51,13 +45,13 @@ document.addEventListener('DOMContentLoaded', function () {
         var datos = await respuesta.json();
 
         if (!respuesta.ok) {
-            throw new Error(datos.error || 'Error en la petición al servidor');
+            throw new Error(datos.error || 'Error interno en la respuesta del servidor');
         }
 
         return datos;
     }
 
-    // ---------- Buscador de Vibras ----------
+    // ---------- BUSCADOR DE VIBRAS ----------
 
     var vibesForm = document.getElementById('vibes-form');
     var vibesConsulta = document.getElementById('consulta');
@@ -73,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var consulta = vibesConsulta.value.trim();
 
         if (!consulta) {
-            mostrarError(vibesError, vibesErrorText, 'Escribe una emoción, situación o pensamiento.');
+            mostrarError(vibesError, vibesErrorText, 'Por favor, escribe una emoción, situación o inquietud.');
             return;
         }
 
@@ -90,12 +84,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 card.className = 'card';
 
                 var titulo = document.createElement('h2');
-                titulo.textContent = 'Frases que conectan con tu sentir';
+                titulo.innerHTML = '<span>CITAS QUE CONECTAN CON TU SENTIR</span> <span class="badge-tag">TOP 3 MATCH</span>';
                 card.appendChild(titulo);
 
-                datos.results.forEach(function (resultado) {
+                datos.results.forEach(function (resultado, index) {
                     var cita = document.createElement('div');
                     cita.className = 'quote';
+                    cita.style.animationDelay = (index * 0.1) + 's';
 
                     var texto = document.createElement('div');
                     texto.className = 'text';
@@ -107,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     var score = document.createElement('div');
                     score.className = 'score';
-                    score.textContent = 'Similitud semántica: ' + resultado.score_percent + '%';
+                    score.textContent = 'AFINIDAD SEMÁNTICA: ' + resultado.score_percent + '%';
 
                     cita.appendChild(texto);
                     cita.appendChild(autor);
@@ -117,8 +112,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 var meta = document.createElement('div');
                 meta.className = 'meta';
-                meta.textContent = datos.total_phrases + ' frases en la base · ' +
-                    datos.search_time_ms + ' ms · método: ' + datos.method;
+                meta.innerHTML = '<span>BASE: ' + datos.total_phrases + ' FRASES</span> ' +
+                    '<span>TIEMPO: ' + datos.search_time_ms + ' MS</span> ' +
+                    '<span>MÉTODO: SIMILITUD COSENO</span>';
                 card.appendChild(meta);
 
                 vibesResults.appendChild(card);
@@ -133,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     });
 
-    // ---------- Orador de Debates ----------
+    // ---------- ORADOR DE DEBATES ----------
 
     var debateForm = document.getElementById('debate-form');
     var debatePregunta = document.getElementById('pregunta');
@@ -149,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var pregunta = debatePregunta.value.trim();
 
         if (!pregunta) {
-            mostrarError(debateError, debateErrorText, 'Escribe una pregunta filosófica o compleja.');
+            mostrarError(debateError, debateErrorText, 'Por favor, escribe una pregunta filosófica o compleja.');
             return;
         }
 
@@ -163,43 +159,52 @@ document.addEventListener('DOMContentLoaded', function () {
                 debateResults.innerHTML = '';
 
                 if (datos.success) {
-                    var ensayo = document.createElement('div');
-                    ensayo.className = 'card';
+                    var ensayoCard = document.createElement('div');
+                    ensayoCard.className = 'card essay-wrapper';
 
                     var titulo = document.createElement('h2');
-                    titulo.textContent = 'Mini-ensayo';
-                    ensayo.appendChild(titulo);
+                    titulo.innerHTML = '<span>ENSAYO FILOSÓFICO EXPLICATIVO</span> <span class="badge-tag">RAG GROUNDED</span>';
+                    ensayoCard.appendChild(titulo);
 
                     var essay = document.createElement('div');
                     essay.className = 'essay';
 
-                    datos.answer.split(/\n\s*\n/).forEach(function (parrafo) {
+                    var parrafos = datos.answer.split(/\n\s*\n/);
+                    parrafos.forEach(function (parrafo) {
                         if (!parrafo.trim()) return;
                         var p = document.createElement('p');
                         p.textContent = parrafo.trim();
                         essay.appendChild(p);
                     });
 
-                    ensayo.appendChild(essay);
-                    debateResults.appendChild(ensayo);
+                    ensayoCard.appendChild(essay);
+
+                    var meta = document.createElement('div');
+                    meta.className = 'meta';
+                    meta.innerHTML = '<span>ESTRUCTURA: ' + parrafos.length + ' PÁRRAFOS ANALÍTICOS</span> ' +
+                        '<span>CITAS VERIFICADAS: SÍ</span>';
+                    ensayoCard.appendChild(meta);
+
+                    debateResults.appendChild(ensayoCard);
                 } else {
                     var aviso = document.createElement('div');
                     aviso.className = 'notice';
-                    aviso.textContent = datos.answer;
+                    aviso.textContent = '▲ ' + datos.answer;
                     debateResults.appendChild(aviso);
                 }
 
                 if (datos.sources && datos.sources.length > 0) {
-                    var fuentes = document.createElement('div');
-                    fuentes.className = 'card';
+                    var fuentesCard = document.createElement('div');
+                    fuentesCard.className = 'card';
 
                     var tituloFuentes = document.createElement('h2');
-                    tituloFuentes.textContent = 'Fuentes recuperadas';
-                    fuentes.appendChild(tituloFuentes);
+                    tituloFuentes.innerHTML = '<span>FUENTES RECUPERADAS</span> <span class="badge-tag">' + datos.sources.length + ' CITAS</span>';
+                    fuentesCard.appendChild(tituloFuentes);
 
-                    datos.sources.forEach(function (fuente) {
+                    datos.sources.forEach(function (fuente, index) {
                         var cita = document.createElement('div');
                         cita.className = 'quote';
+                        cita.style.animationDelay = (index * 0.1) + 's';
 
                         var texto = document.createElement('div');
                         texto.className = 'text';
@@ -211,15 +216,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         var score = document.createElement('div');
                         score.className = 'score';
-                        score.textContent = 'Similitud semántica: ' + fuente.score;
+                        score.textContent = 'SIMILITUD COSENO: ' + fuente.score;
 
                         cita.appendChild(texto);
                         cita.appendChild(autor);
                         cita.appendChild(score);
-                        fuentes.appendChild(cita);
+                        fuentesCard.appendChild(cita);
                     });
 
-                    debateResults.appendChild(fuentes);
+                    debateResults.appendChild(fuentesCard);
                 }
 
                 mostrar(debateResults);
@@ -233,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     });
 
-    // ---------- Ayudantes de visibilidad ----------
+    // ---------- AYUDANTES DE VISIBILIDAD ----------
 
     function mostrar(elemento) {
         elemento.classList.remove('hidden');

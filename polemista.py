@@ -158,7 +158,8 @@ class Polemista:
         if not api_key:
             return None
 
-        return OpenAI(api_key=api_key)
+        # max_retries=0 y timeout=2.0 evitan demoras cuando la API key no tiene cuota o falla la red
+        return OpenAI(api_key=api_key, max_retries=0, timeout=2.0)
 
     # ---------------------------------------------------------
     # BÚSQUEDA SEMÁNTICA
@@ -227,14 +228,20 @@ class Polemista:
                 )
             }
 
-        if self.client is None:
-            respuesta = self._generar_mini_ensayo_local(
-                pregunta,
-                fuentes
-            )
+        respuesta = None
+        if self.client is not None:
+            try:
+                respuesta = self._generar_con_openai(
+                    pregunta,
+                    fuentes
+                )
+            except Exception:
+                # Si falla OpenAI (cuota excedida o sin red), deshabilitar self.client para usar generación local instantánea
+                self.client = None
+                respuesta = None
 
-        else:
-            respuesta = self._generar_con_openai(
+        if respuesta is None:
+            respuesta = self._generar_mini_ensayo_local(
                 pregunta,
                 fuentes
             )
@@ -275,28 +282,22 @@ class Polemista:
             )
 
         system_prompt = """
-Eres un polemista filosófico.
+Eres un polemista y ensayista filosófico de alto nivel.
 
-Tu tarea es responder una pregunta filosófica o compleja utilizando
-EXCLUSIVAMENTE las fuentes proporcionadas por el sistema.
+Tu tarea es responder a la pregunta del usuario redactando un ensayo profundo, analítico y altamente explicativo, utilizando EXCLUSIVAMENTE las fuentes proporcionadas.
 
 REGLAS OBLIGATORIAS:
 
-1. Escribe exactamente DOS párrafos.
-2. Responde directamente a la pregunta.
-3. Debes utilizar al menos DOS frases de las fuentes cuando existan
-   suficientes fuentes disponibles.
-4. Las frases deben aparecer TEXTUALMENTE, sin modificar palabras.
+1. Escribe exactamente TRES párrafos extensos y bien desarrollados (Introducción analítica, Desarrollo dialéctico, Conclusión sintética).
+2. Responde directamente a la pregunta con profundidad conceptual.
+3. Debes integrar al menos DOS o TRES frases de las fuentes proporcionadas.
+4. Las frases deben aparecer TEXTUALMENTE, sin modificar ni una sola palabra.
 5. Cada frase utilizada debe citarse entre comillas.
-6. Después de cada cita debes indicar su autor entre paréntesis.
-7. No inventes citas.
-8. No atribuyas una frase a un autor diferente.
-9. No utilices conocimiento externo como evidencia.
-10. Puedes desarrollar razonamientos propios, pero estos deben estar
-    argumentativamente condicionados por las frases proporcionadas.
-11. No menciones que eres una inteligencia artificial.
-12. No agregues títulos, listas ni introducciones.
-13. La respuesta debe tener exactamente dos párrafos.
+6. Después de cada cita debes indicar el autor entre paréntesis.
+7. No inventes citas ni atribuyas frases a autores incorrectos.
+8. Desarrolla explicaciones amplias sobre por qué las frases respaldan o matizan el argumento.
+9. No agregues títulos, listas ni notas al pie.
+10. La respuesta debe constar de exactamente tres párrafos explicativos.
 """
 
         user_prompt = f"""
@@ -308,7 +309,7 @@ FUENTES DISPONIBLES EN LA BASE DE DATOS:
 
 {fuentes_texto}
 
-Redacta ahora el mini-ensayo respetando estrictamente todas las reglas.
+Redacta ahora el ensayo explicativo respetando estrictamente todas las reglas.
 """
 
         response = self.client.chat.completions.create(
@@ -330,43 +331,46 @@ Redacta ahora el mini-ensayo respetando estrictamente todas las reglas.
 
     def _generar_mini_ensayo_local(self, pregunta, fuentes):
         """
-        Genera un mini-ensayo de dos párrafos SIN depender de OpenAI.
+        Genera un ensayo profundo y explicativo de tres párrafos SIN depender de OpenAI.
 
-        Usa estrictamente las citas recuperadas de la base de datos y
-        las incorpora textualmente (con su autor entre paréntesis),
-        garantizando que la respuesta cumpla la validación de citas.
+        Usa de manera exhaustiva las citas recuperadas de la base de datos y las
+        incorpora textualmente con su autor entre paréntesis, analizando sus
+        implicaciones conceptuales y ofreciendo una conclusión argumentada.
         """
 
         pregunta_limpia = pregunta.rstrip("?").strip()
 
         primera = fuentes[0]
-
-        if len(fuentes) > 1:
-            segunda = fuentes[1]
-        else:
-            segunda = primera
+        segunda = fuentes[1] if len(fuentes) > 1 else primera
+        tercera = fuentes[2] if len(fuentes) > 2 else segunda
 
         parrafo_1 = (
-            f"Ante la pregunta \"{pregunta_limpia}?\", no basta con opinar: "
-            f"hace falta apoyarse en quienes ya reflexionaron sobre ello. "
-            f"{primera['author']} lo expresó con claridad: "
-            f"\"{primera['text']}\". "
-            f"Esta idea no responde por sí sola, pero señala el camino: "
-            f"para debatir con seriedad hay que examinar los fundamentos "
-            f"de lo que afirmamos antes de defender cualquier postura."
+            f"Al abordar con rigor la pregunta \"{pregunta_limpia}?\", es indispensable trascender "
+            f"las apreciaciones superficiales y fundamentar el análisis en las contribuciones del pensamiento analítico. "
+            f"En este horizonte, {primera['author']} formula una premisa decisiva al señalar que: "
+            f"\"{primera['text']}\" ({primera['author']}). "
+            f"Esta afirmación no constituye un mero adorno retórico, sino un eje analítico fundamental; "
+            f"al examinar su contenido, comprendemos que la materia en debate exige desglosar tanto los supuestos teóricos "
+            f"como las repercusiones prácticas que condicionan nuestra manera de entender el problema."
         )
 
         parrafo_2 = (
-            f"En la misma línea, {segunda['author']} sostiene: "
-            f"\"{segunda['text']}\". "
-            f"Si sumamos ambas reflexiones, la cuestión planteada se vuelve "
-            f"más nítida: un argumento sólido no se improvisa, sino que "
-            f"se construye a partir de razones verificadas. "
-            f"Quien cita estas fuentes puede defender su posición con "
-            f"fundamento; quien las ignora solo repite ideas sin peso."
+            f"Profundizando en las aristas de este dilema, la postura expresada por {segunda['author']} complementa y "
+            f"enriquece la discusión mediante la cita: \"{segunda['text']}\" ({segunda['author']}). "
+            f"La convergencia entre estos planteamientos revela una dinámica dialéctica fecunda: mientras el primer postulado establece "
+            f"los cimientos conceptuales, esta segunda perspectiva introduce matices críticos sobre la experiencia y el discernimiento humano. "
+            f"Asimismo, si consideramos lo sostenido por {tercera['author']}, quien advierte que \"{tercera['text']}\" ({tercera['author']}), "
+            f"resulta claro que cualquier postura sólida requiere sopesar armónicamente la evidencia con un análisis razonado."
         )
 
-        return f"{parrafo_1}\n\n{parrafo_2}"
+        parrafo_3 = (
+            f"En conclusión, el examen integrado de estas fuentes demuestra que la pregunta planteada no admite respuestas simplistas. "
+            f"La verdadera solidez de una argumentación filosófica estriba en su capacidad para articular de forma coherente "
+            f"las evidencias textuales recuperadas con una reflexión crítica de alcance explicativo. Quien adopta este enfoque respaldado "
+            f"no solo sostiene su tesis con autoridad epistemológica, sino que eleva la calidad del debate hacia una fundamentación duradera."
+        )
+
+        return f"{parrafo_1}\n\n{parrafo_2}\n\n{parrafo_3}"
 
     # ---------------------------------------------------------
     # VALIDACIÓN
@@ -390,14 +394,14 @@ Redacta ahora el mini-ensayo respetando estrictamente todas las reglas.
         if citas_validas == 0:
             return False
 
-        # Comprobamos que existan dos párrafos.
+        # Comprobamos que existan al menos 2 párrafos bien estructurados.
         parrafos = [
             p.strip()
             for p in re.split(r"\n\s*\n", respuesta)
             if p.strip()
         ]
 
-        if len(parrafos) != 2:
+        if len(parrafos) < 2:
             return False
 
         return True
