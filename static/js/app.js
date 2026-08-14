@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     var texto = document.createElement('div');
                     texto.className = 'text';
-                    texto.textContent = '"' + resultado.phrase + '"';
+                    texto.textContent = '“' + resultado.phrase + '”';
 
                     var autor = document.createElement('div');
                     autor.className = 'author';
@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         var texto = document.createElement('div');
                         texto.className = 'text';
-                        texto.textContent = '"' + fuente.text + '"';
+                        texto.textContent = '“' + fuente.text + '”';
 
                         var autor = document.createElement('div');
                         autor.className = 'author';
