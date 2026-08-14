@@ -9,6 +9,12 @@ En Linux puedes configurar la variable temporalmente:
 export OPENAI_API_KEY="TU_API_KEY"
 ```
 
+En Windows:
+
+```bash
+$env:OPENAI_API_KEY="TU_API_KEY"
+```
+
 Luego comprueba:
 
 ```bash
@@ -24,6 +30,21 @@ __pycache__/
 .env
 .vscode/
 ```
+
+1. Crear y activar el entorno virtual en Windows:
+    # PowerShell
+    python -m venv venv
+    .\venv\Scripts\Activate.ps1
+    (En CMD usar venv\Scripts\activate.bat)
+  2. Instalar dependencias:
+    pip install -r requirements.txt
+
+  3. Generar frases (si no existe frases.json):
+    python scraper.py
+
+  4. Ejecutar la aplicación web:
+    python app.py
+    Y abre tu navegador en http://127.0.0.1:5000.
 
 ## Descripción General
 
@@ -137,55 +158,85 @@ recuperación (RAG) + grounding + validación de citas**.
 - **Gestor de paquetes:** pip
 - **Conexión a internet:** Para acceder a quotes.toscrape.com
 
-## Instalación
+## Instalación y Configuración
 
-### Opción 1: Usando el entorno virtual existente
+### ⚠️ Importante sobre entornos virtuales en Windows vs Linux
+Los entornos virtuales (`venv`) contienen binarios y rutas absolutas específicas de cada sistema operativo. **Si creaste un `venv` en Linux, no funcionará en tu portátil Windows**. Debes crear un entorno virtual limpio en Windows.
 
-Si el proyecto ya incluye un entorno virtual (`venv`), simplemente actívalo:
+---
 
-```bash
-# En Linux/macOS
-source venv/bin/activate
+### Paso 1: Crear el entorno virtual
 
-# En Windows
-venv\Scripts\activate
+**En Windows (PowerShell / CMD):**
+```powershell
+python -m venv venv
 ```
 
-### Opción 2: Crear un nuevo entorno virtual
+**En Linux / macOS:**
+```bash
+python3 -m venv venv
+```
 
-Si prefieres crear un entorno limpio, ejecuta los siguientes comandos:
+---
+
+### Paso 2: Activar el entorno virtual
+
+**En Windows (PowerShell):**
+```powershell
+.\venv\Scripts\Activate.ps1
+# O simplemente:
+.\venv\Scripts\activate
+```
+*(Si PowerShell indica un error de directiva de ejecución de scripts, ejecuta: `Set-ExecutionPolicy -Scope Process Bypass`)*
+
+**En Windows (CMD):**
+```cmd
+venv\Scripts\activate.bat
+```
+
+**En Linux / macOS:**
+```bash
+source venv/bin/activate
+```
+
+---
+
+### Paso 3: Instalar las dependencias
 
 ```bash
-# Crear el entorno virtual
-python3 -m venv venv
-
-# Activar el entorno
-source venv/bin/activate  # Linux/macOS
-# o
-venv\Scripts\activate     # Windows
-
-# Instalar las dependencias
 pip install -r requirements.txt
 ```
 
-### Opción 3: Instalación automática (Windows)
+---
 
-En la raíz del proyecto (`omaigaa_interestelar/`) ejecuta:
+### Paso 4: Generar la base de datos de frases (Requerido la primera vez)
 
-```powershell
-.\setup.ps1    # crea .venv-2 e instala requirements.txt
-.\run.ps1      # arranca el servidor en http://localhost:5000
-```
-
-## Uso
-
-### Servidor web omaigaa (Buscador de Vibras + Orador de Debates)
+Para poder ejecutar la búsqueda semántica o el servidor Flask, necesitas tener generado el archivo `frases.json`. Ejecuta el scraper:
 
 ```bash
-cd omaigaa
-python3 app.py          # o .\run.ps1 desde la raíz del proyecto
-# Abrir http://localhost:5000
+python scraper.py
 ```
+
+---
+
+## Uso y Ejecución
+
+### Servidor Web (Buscador de Vibras + Orador de Debates)
+
+Para iniciar el servidor Flask local:
+
+**En Windows:**
+```powershell
+python app.py
+```
+
+**En Linux / macOS:**
+```bash
+python3 app.py
+```
+
+Abre en tu navegador la URL indicada:
+`http://127.0.0.1:5000` o `http://localhost:5000`
 
 Rutas disponibles:
 

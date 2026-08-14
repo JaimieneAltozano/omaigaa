@@ -1,7 +1,6 @@
-# Motor de Búsqueda Semántica - Interestelar
+# Motor de Búsqueda Semántica 
 
 **Versión:** 1.0.0  
-**Autor:** Manus AI  
 **Fecha:** Agosto 10, 2026
 
 ---
