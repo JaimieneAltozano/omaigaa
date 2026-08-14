@@ -7,7 +7,11 @@ Este script genera embeddings semánticos para las 100 frases usando
 sentence-transformers (modelo local, sin IA/API) y los guarda
 en un archivo NumPy para búsqueda rápida.
 
-Modelo: all-MiniLM-L6-v2 (384 dimensiones, rápido y eficiente)
+Modelo: paraphrase-multilingual-MiniLM-L12-v2 (768 dimensiones)
+
+NOTA: se usa un modelo multilingüe para que las consultas en español
+sean comparables con las frases en inglés (búsqueda semántica
+trans-idioma, sin palabras clave compartidas).
 
 Autor: Manus AI
 Versión: 1.0.0
@@ -51,11 +55,11 @@ def main():
     
     # Cargar modelo
     print("\n[2/3] Cargando modelo sentence-transformers...")
-    print("  Modelo: all-MiniLM-L6-v2")
-    print("  Dimensiones: 384")
+    print("  Modelo: paraphrase-multilingual-MiniLM-L12-v2")
+    print("  Dimensiones: 768")
     print("  Descargando primera vez (puede tardar)...")
     
-    model = SentenceTransformer('all-MiniLM-L6-v2')
+    model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
     print("  ✓ Modelo cargado")
     
     # Generar embeddings
@@ -76,7 +80,7 @@ def main():
     
     # Guardar metadata
     metadata = {
-        "model": "all-MiniLM-L6-v2",
+        "model": "paraphrase-multilingual-MiniLM-L12-v2",
         "dimensions": embeddings.shape[1],
         "num_phrases": len(phrases),
         "phrases": phrases

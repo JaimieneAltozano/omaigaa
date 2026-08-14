@@ -1,156 +1,138 @@
 #!/usr/bin/env python3
 """
-Servidor Flask - Motor de Búsqueda Semántica (Interestelar)
-============================================================
+Servidor Flask - Buscador de Vibras + Orador de Debates
+=========================================================
 
-Servidor web que conecta el motor de búsqueda semántica local
-(sin IA) con la interfaz web inspirada en Interestelar.
+Unifica los dos motores del proyecto:
+
+1. Buscador de "Vibras" o Emociones
+   Analiza la intención de una frase (emoción, situación o pensamiento)
+   y devuelve las 3 citas que mejor conectan, sin usar palabras clave.
+   Implementación local: embeddings multilingües + similitud coseno.
+
+2. Orador de Debates Respaldado
+   Dada una pregunta compleja, recupera las frases relacionadas y redacta
+   un mini-ensayo de dos párrafos que cita textualmente esas fuentes.
+   Recuperación semántica local + generación (OpenAI o plantilla local).
 
 Rutas:
 - GET  /             → Página principal (HTML)
 - GET  /api/health   → Estado del servicio (JSON)
-- POST /api/search   → Endpoint de búsqueda (JSON)
+- POST /api/search   → Buscador de vibras (JSON)
+- POST /api/debate   → Orador de debates (JSON)
 
 Configuración por variables de entorno:
-- HOST        → Interfaz a escuchar (default: 0.0.0.0)
-- PORT        → Puerto (default: 5000)
-- FLASK_DEBUG → "1" habilita el modo debug (default: "0")
-- MODEL_NAME  → Modelo sentence-transformers (default: all-MiniLM-L6-v2)
-
-Tecnología:
-- Flask (servidor web)
-- sentence-transformers (embeddings locales)
-- scikit-learn (similitud coseno)
-
-Autor: Manus AI
-Versión: 1.1.0
+- HOST → Interfaz a escuchar (default: 127.0.0.1)
+- PORT → Puerto (default: 5000)
 """
 
-import json
-import logging
 import os
-import sys
-from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request
 
+from polemista import MODEL_NAME, Polemista
 from semantic_search_local import LocalSemanticSearchEngine
 
 
-# Forzar consola UTF-8 (evita caracteres corruptos en Windows)
-for stream in (sys.stdout, sys.stderr):
-    try:
-        stream.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
-
-
-# Configurar logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-
-# Configuración desde variables de entorno
-HOST = os.getenv("HOST", "0.0.0.0")
+HOST = os.getenv("HOST", "127.0.0.1")
 PORT = int(os.getenv("PORT", "5000"))
-DEBUG = os.getenv("FLASK_DEBUG", "0") == "1"
-MODEL_NAME = os.getenv("MODEL_NAME", "all-MiniLM-L6-v2")
+TOP_K = 3
 
-
-# Inicializar Flask
 app = Flask(__name__)
 
-
-def create_search_engine() -> LocalSemanticSearchEngine:
-    """Crea el motor de búsqueda semántica con manejo de errores claro."""
-    logger.info("Inicializando motor de búsqueda semántica local...")
-    try:
-        engine = LocalSemanticSearchEngine(model_name=MODEL_NAME)
-    except Exception as e:
-        logger.error(f"✗ Error inicializando el motor: {e}")
-        logger.error(
-            "Verifica que existen 'frases.json' y 'embeddings.npy' "
-            "(genera este último con: python generate_embeddings.py) "
-            "y que hay conexión a internet la primera vez (descarga del modelo)."
-        )
-        raise
-    logger.info("✓ Motor listo")
-    return engine
+buscador = LocalSemanticSearchEngine(top_k=TOP_K)
+polemista = Polemista()
 
 
-# Motor de búsqueda (se carga una sola vez al iniciar)
-search_engine = create_search_engine()
+# -------------------------------------------------------------
+# VISTA PRINCIPAL
+# -------------------------------------------------------------
 
-
-@app.route('/')
+@app.route("/", methods=["GET"])
 def index():
-    """Página principal con interfaz Interestelar."""
-    return render_template('index.html')
+    """Página principal. El frontend consume las APIs JSON con JavaScript."""
+    return render_template("index.html")
 
 
-@app.route('/api/health', methods=['GET'])
+# -------------------------------------------------------------
+# API
+# -------------------------------------------------------------
+
+@app.route("/api/health", methods=["GET"])
 def health():
-    """Endpoint de estado del servicio."""
+    """Estado del servicio."""
     return jsonify({
         "status": "ok",
         "model": MODEL_NAME,
-        "total_phrases": len(search_engine.phrases),
+        "total_phrases": len(buscador.phrases),
         "method": "cosine_similarity",
         "ai_used": False
     }), 200
 
 
-@app.route('/api/search', methods=['POST'])
-def search():
+@app.route("/api/search", methods=["POST"])
+def api_search():
     """
-    Endpoint de búsqueda semántica.
-    
-    Recibe una consulta y devuelve las 3 frases más similares
-    usando embeddings locales y similitud coseno (sin IA).
+    Buscador de "Vibras": devuelve las 3 citas que mejor conectan
+    con la emoción, situación o pensamiento descrito.
     """
+    data = request.get_json(silent=True)
+
+    if not data or not data.get("query"):
+        return jsonify({
+            "error": "No se proporcionó una consulta"
+        }), 400
+
+    consulta = data["query"].strip()
+
+    if not consulta:
+        return jsonify({
+            "error": "La consulta no puede estar vacía"
+        }), 400
+
     try:
-        # Obtener datos del request
-        data = request.get_json(silent=True)
-        
-        if not data or 'query' not in data:
-            return jsonify({
-                "error": "No se proporcionó una consulta"
-            }), 400
-        
-        query = data['query'].strip()
-        
-        if not query:
-            return jsonify({
-                "error": "La consulta no puede estar vacía"
-            }), 400
-        
-        # Realizar búsqueda
-        results = search_engine.search_with_scores(query, top_k=3)
-        
-        # Devolver resultados
-        return jsonify(results), 200
-        
+        resultado = buscador.search_with_scores(consulta, top_k=TOP_K)
+        return jsonify(resultado), 200
+
     except Exception as e:
-        logger.error(f"✗ Error en búsqueda: {e}", exc_info=True)
         return jsonify({
             "error": f"Error interno: {str(e)}"
         }), 500
 
 
-if __name__ == '__main__':
-    logger.info("\n" + "="*70)
-    logger.info("🚀 SERVIDOR FLASK - INTERESTELAR")
-    logger.info("="*70)
-    logger.info(f"📍 URL: http://localhost:{PORT}")
-    logger.info(f"🔧 Debug: {DEBUG}")
-    logger.info(f"🌐 Host: {HOST}")
-    logger.info("="*70 + "\n")
-    
+@app.route("/api/debate", methods=["POST"])
+def api_debate():
+    """
+    Orador de Debates: redacta un mini-ensayo de dos párrafos
+    condicionado a citar las frases recuperadas de la base de datos.
+    """
+    data = request.get_json(silent=True)
+
+    if not data or not data.get("pregunta"):
+        return jsonify({
+            "error": "No se proporcionó una pregunta"
+        }), 400
+
+    pregunta = data["pregunta"].strip()
+
+    if not pregunta:
+        return jsonify({
+            "error": "La pregunta no puede estar vacía"
+        }), 400
+
+    try:
+        resultado = polemista.generar_debate(pregunta)
+        return jsonify(resultado), 200
+
+    except Exception as e:
+        return jsonify({
+            "error": f"Error interno: {str(e)}"
+        }), 500
+
+
+if __name__ == "__main__":
     app.run(
         host=HOST,
         port=PORT,
-        debug=DEBUG
+        debug=True
     )

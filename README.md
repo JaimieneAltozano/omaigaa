@@ -1,8 +1,29 @@
 # Web Scraper de Frases Inspiracionales
 
 **Versión:** 1.0.0  
-**Autor:** Manus AI  
 **Última actualización:** Agosto 2026
+
+En Linux puedes configurar la variable temporalmente:
+
+```bash
+export OPENAI_API_KEY="TU_API_KEY"
+```
+
+Luego comprueba:
+
+```bash
+echo $OPENAI_API_KEY
+```
+
+Tu `.gitignore` debería contener:
+
+```gitignore
+venv/
+__pycache__/
+*.pyc
+.env
+.vscode/
+```
 
 ## Descripción General
 
@@ -27,7 +48,7 @@ omaigaa/
 ├── EJECUCION_Y_MEJORAS.md # Informe de ejecución, cambios y mejoras
 ├── SEMANTIC_SEARCH_README.md  # Documentación del motor de búsqueda semántica
 ├── ARCHITECTURE.md        # Documentación técnica detallada
-├── app.py                 # Servidor Flask (interfaz Interestelar)
+├── app.py                 # Servidor Flask (interfaz)
 ├── semantic_search_local.py    # Motor semántico local (embeddings + coseno)
 ├── generate_embeddings.py      # Generador de embeddings locales
 ├── scraper.py            # Script principal mejorado
@@ -35,6 +56,7 @@ omaigaa/
 ├── test_semantic_search.py   # Suite de tests del motor LLM
 ├── test_app.py              # Suite de tests del servidor Flask
 ├── main.ipynb            # Notebook original de Jupyter
+├──polemista.py
 ├── requirements.txt      # Dependencias del proyecto
 ├── .gitignore           # Configuración de Git
 ├── frases.json          # Datos generados (100 frases)
@@ -43,35 +65,71 @@ omaigaa/
 └── venv/                # Entorno virtual Python
 ```
 
-> **Nota:** El entorno virtual `venv_local/` incluido en versiones anteriores
-> estaba incompleto (layout de Linux, sin ejecutable en Windows). El proyecto se
-> ejecuta con el entorno `.venv-2` (Python 3.14) situado en la raíz. Consulta
-> [EJECUCION_Y_MEJORAS.md](EJECUCION_Y_MEJORAS.md) para el informe completo de
-> cómo se ejecutó y las mejoras implementadas.
+## Retos implementados
 
-## Nuevo: Motor de Búsqueda Semántica
+### 1. Buscador de "Vibras" o Emociones
 
-Se implementó un motor de búsqueda semántica que analiza la intención emocional de las consultas y devuelve las 3 frases más relevantes **sin usar búsqueda por palabras clave**.
-
-### Características
+Motor de búsqueda que analiza la **intención emocional** de una frase
+(emoción, situación o pensamiento abstracto) y devuelve las **3 citas**
+de la base de datos que mejor conectan con ese sentimiento, **sin usar
+búsqueda por palabras clave**. La consulta y la frase pueden no compartir
+ni una sola palabra.
 
 - ✅ Análisis de emociones, situaciones y pensamientos abstractos
 - ✅ Conecta con frases que no comparten palabras con la consulta
-- ✅ Usa LLM (Claude Sonnet 4.6) para análisis semántico profundo
-- ✅ Devuelve explicaciones de por qué cada frase conecta
+- ✅ Búsqueda trans-idioma (consultas en español, frases en inglés)
+- ✅ Implementación local con embeddings multilingües
 - ✅ Validado con 10 casos de prueba (100% éxito)
 
-### Uso Rápido
-
 ```bash
-# Ejecutar el motor de búsqueda
-python3 semantic_search.py
-
-# Ejecutar tests de validación
-python3 test_semantic_search.py
+# Ejecutar el motor local (buscador de vibras)
+python3 semantic_search_local.py
 ```
 
-Para más detalles, consulta [SEMANTIC_SEARCH_README.md](SEMANTIC_SEARCH_README.md).
+### 2. Orador de Debates Respaldado
+
+Dada una pregunta filosófica o compleja, el programa **primero recupera**
+las frases relacionadas de la base de datos y luego redacta un **mini-ensayo
+de dos párrafos** condicionado a **citar textualmente** esas fuentes.
+Si la base no tiene información relevante, el programa lo admite.
+
+- ✅ Recuperación semántica (RAG) sobre `frases.json`
+- ✅ Mini-ensayo de dos párrafos con citas textuales y autor
+- ✅ Validación estricta de que las citas existan en la base
+- ✅ Generación local (sin API) o con OpenAI si defines `OPENAI_API_KEY`
+- ✅ Admite cuando no tiene fuentes para debatir
+
+```bash
+# Ejecutar el orador de debates en terminal
+python3 polemista.py
+```
+
+### Arquitectura del Orador de Debates
+
+```text
+             BASE DE DATOS (frases.json)
+                   │
+                   ▼
+        Búsqueda semántica (embeddings)
+                   │
+              Top 5 frases
+                   │
+                   ▼
+        Modelo LLM (solo recibe esas fuentes)
+        o plantilla local con citas textuales
+                   │
+                   ▼
+             Mini-ensayo
+                   │
+                   ▼
+        VALIDACIÓN: ¿las citas existen?
+                   │
+                   ▼
+                Usuario
+```
+
+Esto implementa **recuperación semántica + generación aumentada por
+recuperación (RAG) + grounding + validación de citas**.
 
 ## Requisitos del Sistema
 
@@ -121,7 +179,7 @@ En la raíz del proyecto (`omaigaa_interestelar/`) ejecuta:
 
 ## Uso
 
-### Servidor web omaigaa (búsqueda semántica local)
+### Servidor web omaigaa (Buscador de Vibras + Orador de Debates)
 
 ```bash
 cd omaigaa
@@ -133,11 +191,12 @@ Rutas disponibles:
 
 | Ruta | Descripción |
 |------|-------------|
-| `GET /` | Página principal con interfaz Interestelar |
+| `GET /` | Página principal (pestañas: Buscador de Vibras y Orador de Debates) |
 | `GET /api/health` | Estado del servicio (JSON) |
-| `POST /api/search` | Búsqueda semántica `{"query": "..."}` (JSON) |
+| `POST /api/search` | Buscador de vibras `{"query": "..."}` (JSON) |
+| `POST /api/debate` | Orador de debates `{"pregunta": "..."}` (JSON) |
 
-Configuración por variables de entorno: `HOST`, `PORT`, `FLASK_DEBUG`, `MODEL_NAME`.
+Configuración por variables de entorno: `HOST`, `PORT`.
 
 ### Ejecución desde línea de comandos
 
@@ -220,10 +279,15 @@ Cada objeto contiene dos campos:
 |---------|---------|----------|
 | requests | ≥2.34.0 | Realizar peticiones HTTP |
 | beautifulsoup4 | ≥4.15.0 | Parsear y extraer datos del HTML |
-| flask | ≥3.1.0 | Servidor web (interfaz Interestelar) |
+| flask | ≥3.1.0 | Servidor web (interfaz) |
 | numpy | ≥1.26.0 | Cálculo numérico de embeddings |
 | scikit-learn | ≥1.5.0 | Similitud coseno |
-| sentence-transformers | ≥3.0.0 | Embeddings semánticos locales |
+| sentence-transformers | ≥3.0.0 | Embeddings semánticos multilingües |
+| openai | ≥1.0 | Generación opcional del mini-ensayo (debate) |
+| pytest | ≥8.0 | Ejecución de la suite de pruebas |
+
+Modelo de embeddings: `paraphrase-multilingual-MiniLM-L12-v2`
+(multilingüe: permite comparar consultas en español con frases en inglés).
 
 Para ver todas las dependencias instaladas, ejecuta:
 

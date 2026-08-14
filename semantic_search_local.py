@@ -9,7 +9,7 @@ más relevantes SIN usar IA, APIs externas ni palabras clave.
 
 **Características:**
 - ✅ Sin IA/API (todo local)
-- ✅ Embeddings semánticos (all-MiniLM-L6-v2)
+- ✅ Embeddings semánticos multilingües (paraphrase-multilingual-MiniLM-L12-v2)
 - ✅ Similitud coseno para matching
 - ✅ Búsqueda rápida (milisegundos)
 - ✅ Sin dependencias de internet
@@ -59,7 +59,7 @@ class LocalSemanticSearchEngine:
         phrases_file: Optional[str] = None,
         embeddings_file: Optional[str] = None,
         metadata_file: Optional[str] = None,
-        model_name: str = "all-MiniLM-L6-v2",
+        model_name: str = "paraphrase-multilingual-MiniLM-L12-v2",
         top_k: int = 3
     ):
         """
@@ -83,11 +83,13 @@ class LocalSemanticSearchEngine:
         
         # Cargar datos
         self.phrases = self._load_phrases()
-        self.embeddings = self._load_embeddings()
-        
-        # Cargar modelo (solo para generar embeddings de consultas)
+
+        # Cargar modelo (necesario para generar embeddings de consultas)
         logger.info("Cargando modelo sentence-transformers...")
         self.model = SentenceTransformer(model_name)
+
+        # Cargar (o regenerar) embeddings usando el modelo cargado
+        self.embeddings = self._load_embeddings()
         logger.info(f"✓ Motor local inicializado: {len(self.phrases)} frases")
 
     def _load_phrases(self) -> list[dict]:
@@ -113,19 +115,49 @@ class LocalSemanticSearchEngine:
             raise
 
     def _load_embeddings(self) -> np.ndarray:
-        """Carga los embeddings pre-generados."""
+        """Carga los embeddings pre-generados (o los regenera si no coinciden)."""
+        dimension = self._model_dimension()
+
         try:
             embeddings = np.load(self.embeddings_file)
-            logger.info(f"✓ Embeddings cargados: {embeddings.shape}")
-            return embeddings
-            
+
+            if (
+                embeddings.ndim == 2
+                and embeddings.shape[1] == dimension
+                and embeddings.shape[0] == len(self.phrases)
+            ):
+                logger.info(f"✓ Embeddings cargados: {embeddings.shape}")
+                return embeddings
+
         except FileNotFoundError:
-            logger.error(f"✗ Embeddings no encontrados: {self.embeddings_file}")
-            logger.error("  Ejecuta: python3 generate_embeddings.py")
-            raise
+            logger.info("✗ Embeddings no encontrados, se generarán nuevos.")
         except Exception as e:
-            logger.error(f"✗ Error cargando embeddings: {e}")
-            raise
+            logger.warning(f"⚠ Embeddings no utilizables ({e}), se regenerarán.")
+
+        # Si no existen embeddings compatibles, los generamos ahora.
+        logger.info("Generando embeddings para las frases...")
+        textos = [
+            f"{p['phrase']} - {p['author']}"
+            for p in self.phrases
+        ]
+
+        embeddings = self.model.encode(
+            textos,
+            convert_to_numpy=True
+        )
+
+        np.save(self.embeddings_file, embeddings)
+        logger.info(f"✓ Embeddings generados: {embeddings.shape}")
+        return embeddings
+
+    def _model_dimension(self) -> int:
+        """Devuelve la dimensión del embedding del modelo cargado."""
+        metodo = getattr(self.model, "get_embedding_dimension", None)
+
+        if metodo is not None:
+            return metodo()
+
+        return self.model.get_sentence_embedding_dimension()
 
     def search(self, query: str, top_k: Optional[int] = None) -> list[dict]:
         """

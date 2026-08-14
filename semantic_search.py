@@ -8,7 +8,7 @@ emocional y semántica de una consulta, devolviendo las 3 frases más
 relevantes de la base de datos SIN usar búsqueda por palabras clave.
 
 **Arquitectura:**
-- Usa un LLM (Claude Sonnet 4.6) para analizar la intención semántica
+- Usa un LLM (OpenAI, p. ej. gpt-4o-mini) para analizar la intención semántica
 - El LLM compara la consulta emocional con todas las frases
 - Devuelve el top 3 con explicación de por qué cada frase conecta
 - No depende de palabras clave compartidas
@@ -58,7 +58,7 @@ class SemanticSearchEngine:
     def __init__(
         self,
         phrases_file: str = "frases.json",
-        model: str = "claude-sonnet-4-6",
+        model: str = "gpt-4o-mini",
         top_k: int = 3,
         client: Optional[object] = None,
     ):
@@ -201,8 +201,7 @@ Las frases deben ser EXACTAMENTE las de la base de datos, sin modificaciones."""
                 messages=[
                     {"role": "system", "content": system_prompt.format(top_k=top_k)},
                     {"role": "user", "content": user_prompt}
-                ],
-                extra_body={"thinking": {"type": "enabled", "budget_tokens": 2048}}
+                ]
             )
             
             # Parsear respuesta
